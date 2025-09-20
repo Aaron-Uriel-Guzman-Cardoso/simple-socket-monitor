@@ -4,7 +4,7 @@ title: Haciendo cat /etc/net/tcp obte
 ---
 
 # Monitor simple de Sockets
-##Documentacion del codigo So_proyecto1.c
+## Documentacion del codigo So_proyecto1.c
 para comenzar con esta seccion primero lo que inclui son las librerias que son las siguientes:
 1.-include<stdio.h> -donde: es la libreria estandar de entrada y salida(printf,perror,etc)
 2.-include<stdlib.h> -es la libreria estandar de funciones (malloc,free,exit,atoi,etc)
