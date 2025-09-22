@@ -57,10 +57,18 @@ ParseAddress(uint32_t net_addr, char *addr_str, size_t n)
 	    (net_addr >> 24) & 0xFF);
 }
 
-//definimos nuestras funciones.
-void ReadProcNet(enum protocol protocol){
-	if (protocol != TCP && protocol != UDP){
-		fprintf(stderr,"Error: protocolo desconocido\n");
+/**
+ * \brief Leemos e imprimimos sockets TCP y UDP activos
+ * 
+ * Leemos el contenido de los archivos /proc/net/tcp y /proc/net/udp e
+ * imprimimos su contenido en un formato más legible, ya que el Kernel
+ * ofrece la información en big-endian y en hexadecimal.
+ * 
+ * \param protocol El protocolo a leer: TCP o UDP.
+ */
+void ReadProcNet(enum protocol protocol) {
+	if (protocol != TCP && protocol != UDP) {
+		fprintf(stderr, "Error: protocolo desconocido\n");
 		return;
 	}
 	const char *path = (protocol == TCP) ? "/proc/net/tcp" : "/proc/net/udp";
@@ -70,7 +78,7 @@ void ReadProcNet(enum protocol protocol){
 		return;
 	}
 
-	char line[512];
+	char line[512]; // Búffer fijo, no queremos complicarnos la vida
 	fgets(line,sizeof(line),f); //saltar el encabezado
 	
 	printf("\nProtocolo: %s\n", (protocol == TCP) ? "TCP" : "UDP");
@@ -82,19 +90,32 @@ void ReadProcNet(enum protocol protocol){
 		uint16_t local_port = 0, remote_port = 0; 
 		uint8_t state = 0;
 
-		/**
-		 * TODO: extraer los puertos correctamente, %04hX y similares no
-		 *       interpretan bien los números hexadecimales (parece ser un
-		 *       bug).
-		 * \note Recomendable usar strtoul() para convertir la cadena
-		 *       manualmente a un entero.
+
+		//Declarar buffers para guardar las cadenas hexadecimales.
+		char local_addr_hex[9], local_port_hex[5]; // 8 y 5 pero con uno mas por el \0
+		char remote_addr_hex[9], remote_port_hex[5];
+
+		/*
+		 * Extraemos de los archivos sin usar "%X" porque causa demasiados
+		 * problemas, posiblemente hay un bug al usar %hX. En su lugar 
+		 * aplicamos expresiones regulares, las cuales parecen ser más 
+		 * confiables.
 		 */
-		int valid_inputs = sscanf(line, "%*d: %8X:%04hX %8X:%04hX %2X",
-			&local_addr, &local_port, &remote_addr, &remote_port, &state);
+		int valid_inputs = sscanf(line, 
+			"%*d: %8[0-9A-Fa-f]:%4[0-9A-Fa-f] %8[0-9A-Fa-f]:%4[0-9A-Fa-f] %hhX",
+			local_addr_hex, local_port_hex, remote_addr_hex, remote_port_hex, 
+			&state);
+		
 		if (valid_inputs < 5){
 			fprintf(stderr,"Error: formato inesperado en %s\n",path);
 			continue;
 		}
+
+		//Convertir manualmente las cadenas hexadecimales a enteros con strtoul.
+		local_addr = (uint32_t)strtoul(local_addr_hex, NULL, 16);
+		local_port = (uint16_t)strtoul(local_port_hex, NULL, 16);
+		remote_addr = (uint32_t)strtoul(remote_addr_hex, NULL, 16);
+		remote_port = (uint16_t)strtoul(remote_port_hex, NULL, 16);
 
 		ParseAddress(local_addr,local_addr_str, sizeof(local_addr_str));
 		ParseAddress(remote_addr,remote_addr_str, sizeof(remote_addr_str));
@@ -112,17 +133,13 @@ void ReadProcNet(enum protocol protocol){
 	}
 	
 	fclose(f);
-
 }
-
 int main(){
 
 	printf("=== Monitor de Sockets abiertos ===\n");
 	printf("Consulta directa en /proc/net/tcp y /proc/net/udp\n");
 	
-	//llamo mi funcion que lea el dir: /proc/net/tcp y /proc/net/udp desde mi main.
 	ReadProcNet(TCP);
 	ReadProcNet(UDP);
 return 0;
 }
-
