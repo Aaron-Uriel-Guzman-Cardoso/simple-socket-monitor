@@ -3,20 +3,13 @@
 #include <stdint.h>
 #include <string.h>
 
-/*
-Sistemas Operactivos
-Claudio Castro Murillo
-1630190a
-monitor de sockets, TCP y UDP
-*/
-
 enum protocol {
 	TCP,
 	UDP
 };
 
-/*
-los estados tcp (según include/net/tcp_states.h en Linux)
+/**
+ * \brief Estados de Sockets TCP según include/net/tcp_states.h en Linux
 */
 const char *TCP_states[] = {
     "UNKNOWN",
@@ -134,12 +127,13 @@ void ReadProcNet(enum protocol protocol) {
 	
 	fclose(f);
 }
-int main(){
 
+
+int main() {
 	printf("=== Monitor de Sockets abiertos ===\n");
 	printf("Consulta directa en /proc/net/tcp y /proc/net/udp\n");
 	
 	ReadProcNet(TCP);
 	ReadProcNet(UDP);
-return 0;
+    return 0;
 }
