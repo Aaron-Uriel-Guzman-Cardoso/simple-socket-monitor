@@ -118,7 +118,7 @@ void ReadProcNet(enum protocol protocol) {
 		snprintf(sock_remote, sizeof(sock_remote), "%s:%d", remote_addr_str, remote_port);
 
 		if(protocol == TCP && state < 12){
-			printf("Debug: %.60s\n", line);
+			//printf("Debug: %.60s\n", line);
 			printf("%-24s %-24s %-12s\n",sock_local, sock_remote,TCP_states[state]);
 		} else {
 			printf("%-24s %-24s\n",sock_local, sock_remote);
